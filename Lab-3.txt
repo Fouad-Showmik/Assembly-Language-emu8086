@@ -1,0 +1,209 @@
+TASK-1
+
+
+.MODEL SMALL
+.STACK 100H
+
+DECODE MACRO ENCODED,DECODED
+    MOV AX,ENCODED
+    SUB AX,10
+    MOV BX,3
+    DIV BX
+    ADD AL,65
+    MOV DECODED,AL
+ENDM
+
+.DATA
+STRING DW 10,13,16,19,22
+DECODED_STRING DB 5 DUP(?)
+OUTPUT DB "Original String: $"
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+    
+    LEA SI,STRING
+    LEA DI,DECODED_STRING
+    MOV CX,5
+    
+    DECODE_LOOP:
+        MOV AX,[SI]
+        DECODE AX,AL
+        MOV [DI],AL
+        INC SI
+        INC SI
+        INC DI
+        LOOP DECODE_LOOP
+    
+        
+    MOV AH,09H
+    LEA DX,OUTPUT
+    INT 21H 
+    
+    LEA SI,DECODED_STRING
+    MOV CX,5
+    PRINT:
+        MOV AH,02H
+        MOV DL,[SI]
+        INC SI
+        INT 21H
+        LOOP PRINT
+
+    MAIN ENDP
+END MAIN
+
+
+
+
+
+
+
+
+TASK-2
+
+
+.MODEL SMALL
+.STACK 100H
+
+DECODE MACRO ENCODED,DECODED
+    MOV AX,ENCODED
+    SUB AX,10
+    MOV BX,3
+    DIV BX
+    ADD AL,65
+    MOV DECODED,AL
+ENDM
+
+.DATA
+STRING DW 10,13,16,19,22,25,28,31,106,109
+DECODED_STRING DB 10 DUP(?)
+OUTPUT DB "Original String: $"
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+    
+    LEA SI,STRING
+    LEA DI,DECODED_STRING
+    MOV CX,10
+    
+    DECODE_LOOP:
+        MOV AX,[SI]
+        DECODE AX,AL
+        MOV [DI],AL
+        INC SI
+        INC SI
+        INC DI
+        LOOP DECODE_LOOP
+    
+        
+    MOV AH,09H
+    LEA DX,OUTPUT
+    INT 21H 
+    
+    LEA SI,DECODED_STRING
+    MOV CX,10
+    PRINT:
+        MOV AH,02H
+        MOV DL,[SI]
+        INC SI
+        INT 21H
+        LOOP PRINT
+
+    MAIN ENDP
+END MAIN
+
+
+
+
+
+
+TASK-3
+
+
+.MODEL SMALL
+.STACK 100H
+
+DECODE MACRO ENCODED,DECODED
+    MOV AX,ENCODED
+    SUB AX,10
+    MOV BX,3
+    DIV BX
+    ADD AL,65
+    MOV DECODED,AL
+ENDM
+
+.DATA
+STRING DW 110,113,116,119,122,125,128,131 
+ADJUST DW 8 DUP(?)
+DECODED_STRING DB 8 DUP(?)
+OUTPUT DB "Decoded String: $"
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+    
+
+    
+    LEA SI,STRING
+    MOV CX,8
+    PUSH_STACK:
+    MOV AX,[SI]
+    PUSH AX
+    INC SI
+    INC SI
+    LOOP PUSH_STACK
+    
+    
+    LEA SI,ADJUST
+    MOV CX,8
+    PADDING_LOOP:
+        POP AX
+        SUB AX,100
+        MOV [SI],AX
+        INC SI
+        INC SI
+    LOOP PADDING_LOOP
+    
+    
+    
+    LEA SI,ADJUST
+    LEA DI,DECODED_STRING
+    MOV CX,8
+    DECODE_LOOP:
+        MOV AX,[SI]
+        DECODE AX,AL
+        MOV [DI],AL
+        INC SI
+        INC SI
+        INC DI
+        LOOP DECODE_LOOP
+        
+    
+    
+    LEA SI,DECODED_STRING
+    MOV CX,8
+    AGAIN_PUSH: 
+        MOV AX,[SI]
+        PUSH AX
+        INC SI
+        LOOP AGAIN_PUSH
+    
+           
+    MOV AH,09H
+    LEA DX,OUTPUT
+    INT 21H 
+    
+
+    MOV CX,8
+    PRINT:
+        MOV AH,02H  
+        POP DX
+        INC SI
+        INT 21H
+        LOOP PRINT
+
+    MAIN ENDP
+END MAIN
+
