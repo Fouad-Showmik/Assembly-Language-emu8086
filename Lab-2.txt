@@ -1,0 +1,632 @@
+TASK-1
+
+.MODEL SMALL
+.STACK 100H
+PRINT MACRO M1
+    LEA DX,M1
+    MOV AH,09H
+    INT 21H
+ENDM
+.DATA
+A DW "HELLO$"
+.CODE 
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    
+    PRINT A
+    MAIN ENDP
+END MAIN
+ 
+
+ 
+
+  
+   
+TASK-2
+
+.MODEL SMALL
+.STACK 100H
+
+FACTORIAL MACRO M1
+    MOV AX,1
+    MOV CX,M1
+    CMP CX,0
+    JE END_LOOP
+    
+    FACTOR:
+        MUL CX
+        LOOP FACTOR
+    END_LOOP:
+ENDM   
+
+.DATA
+A DB "FACTORIAL: $"
+INPUT DW 5
+
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    
+    MOV AH,09H
+    LEA DX,A
+    INT 21H
+    
+    MOV CX,INPUT
+    FACTORIAL CX
+   
+    MOV BX,AX 
+    MOV CX,10  
+    
+PRINT_LOOP:
+    MOV DX,0   
+    DIV CX      
+    ADD DL,48  
+    PUSH DX     
+    CMP AX,0   
+    JNE PRINT_LOOP  
+    
+PRINT_DIGITS:
+    POP DX      
+    MOV AH,02H
+    INT 21H    
+    CMP SP,100H 
+    JNE PRINT_DIGITS 
+    
+    MAIN ENDP
+END MAIN
+
+
+
+
+
+TASK-3
+
+.MODEL SMALL
+.STACK 100H
+
+REVERSE_STRING MACRO STR,LEN
+    MOV CX,LEN
+    MOV SI,0
+    PUSH_STACK:
+        MOV DL,STR[SI]
+        PUSH DX
+        INC SI
+        LOOP PUSH_STACK
+
+    MOV CX, LEN
+    POP_STACK:
+        POP DX
+        MOV AH,02H
+        ADD DL,0
+        INT 21H
+        LOOP POP_STACK
+ENDM
+.DATA
+A DB "BANGLADESH$"
+LEN DW 10
+
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    
+    MOV AH,09H
+    LEA DX,A
+    INT 21H
+    
+    MOV AH,02H
+    MOV DX,0AH
+    INT 21H
+    MOV DX,0DH
+    INT 21H
+    
+    REVERSE_STRING A,LEN
+    
+    MAIN ENDP
+END MAIN
+
+
+
+
+TASK-4
+
+.MODEL SMALL
+.STACK 100H
+
+CHECK_BALANCED MACRO EQUATION,RESULT
+    
+    MOV AH,09H
+    LEA SI,EQUATION
+    MOV CX,0 
+
+    CHECK_LOOP:
+        MOV AL,[SI]
+        CMP AL,0
+        JE END_CHECK 
+
+        CMP AL,'('
+        JE OPEN_PAREN
+
+        CMP AL,')'
+        JE CLOSE_PAREN
+
+        JMP NEXT_CHAR
+
+    OPEN_PAREN:
+        INC CX 
+        JMP NEXT_CHAR
+
+    CLOSE_PAREN:
+        DEC CX 
+        CMP CX,-1
+        JE NOT_BALANCED  
+        
+    NEXT_CHAR:
+        INC SI
+        JMP CHECK_LOOP
+
+    END_CHECK:
+        CMP CX,0
+        JE BALANCED
+        JMP NOT_BALANCED
+
+    BALANCED:
+        MOV RESULT,1  
+        JMP DONE_CHECK
+
+    NOT_BALANCED:
+        MOV RESULT,0 
+
+    DONE_CHECK:
+ENDM
+
+.DATA
+EQUATION DB "(a+b)*(c-d)/(e+f)$"
+RESULT DB ?
+RESULT_MSG DB "Parentheses are balanced $"
+NOT_BALANCED_MSG DB "Parentheses are not balanced $"
+
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+
+    CHECK_BALANCED EQUATION,RESULT
+
+    MOV AH,09H
+    LEA DX,EQUATION
+    INT 21H
+
+    MOV AH,02H
+    MOV DL,0AH
+    INT 21H
+    MOV DL,0DH
+    INT 21H
+
+    MOV AL,RESULT
+    CMP AL,1
+    JE PRINT_BALANCED
+
+    MOV AH,09H
+    LEA DX,NOT_BALANCED_MSG
+    INT 21H
+    JMP DONE
+
+    PRINT_BALANCED:
+    MOV AH,09H
+    LEA DX,RESULT_MSG
+    INT 21H
+
+    DONE:
+
+MAIN ENDP
+END MAIN
+
+
+
+TASK-5
+
+.MODEL SMALL
+.STACK 100H
+
+FIND_MAX MACRO ARR, MAX
+    LEA SI, ARR
+    MOV AL, [SI]
+    MOV CX, 2
+    MAXIMUM:
+        ADD SI, 1
+        MOV BL, [SI]
+        CMP AL, BL
+        JGE NEXT
+        MOV AL, BL
+    NEXT:
+        LOOP MAXIMUM
+    MOV MAX, AL
+ENDM
+
+.DATA
+A DB "ENTER THREE NUMBERS: $"
+B DB "THE MAXIMUM NUMBER IS: $"
+ARR DB 3 DUP(?)
+MAX DB ?
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+    
+    MOV AH, 09H
+    LEA DX, A
+    INT 21H
+    
+    ; FOR TAKING THREE NUMBERS AS INPUT
+    LEA SI, ARR
+    MOV CX, 3
+    INPUT:
+        MOV AH, 01H
+        INT 21H 
+        SUB AL, 48
+        MOV [SI], AL
+        INC SI
+        LOOP INPUT 
+    
+    ; FINDING THE MAXIMUM NUMBER
+    FIND_MAX ARR, MAX
+    
+    ; FOR LINE BREAK
+    MOV AH, 02H
+    MOV DX, 0AH
+    INT 21H
+    MOV DX, 0DH
+    INT 21H   
+    
+    MOV AH, 09H
+    LEA DX, B
+    INT 21H
+    
+    ; FOR OUTPUT
+    MOV AH, 02H
+    MOV DL, MAX
+    ADD DL, 48
+    INT 21H
+    
+    MAIN ENDP
+END MAIN
+
+
+
+
+
+TASK-15
+
+.MODEL SMALL
+.STACK 100H
+
+.DATA
+ARR DB 5,2,9,1,4
+ARR_LEN DW 5
+OUTPUT DB "MAXIMUM VALUE: $"
+MAX_VAL DB 0
+MAX_STR DB "$"
+
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+
+    LEA SI,ARR
+    MOV CX,ARR_LEN
+    CALL FIND_MAX_N
+    
+    MOV [MAX_VAL],AL 
+
+    MOV AL,[MAX_VAL]
+    CALL NUM_TO_STR
+
+    MOV AH,09H
+    LEA DX,OUTPUT
+    INT 21H
+
+    MOV AH,09H
+    LEA DX,MAX_STR
+    INT 21H
+
+    MOV AH,4CH
+    INT 21H
+MAIN ENDP
+
+FIND_MAX_N PROC
+
+    MOV AL,[SI]  
+    DEC CX        
+
+LOOP_MAX:
+    INC SI        
+    MOV BL,[SI]
+    CALL MAX_TWO_NUMS
+    LOOP LOOP_MAX
+
+    RET
+FIND_MAX_N ENDP
+
+MAX_TWO_NUMS PROC
+
+    CMP AL,BL
+    JGE END_MAX_TWO_NUMS
+    MOV AL,BL
+END_MAX_TWO_NUMS:
+    RET
+MAX_TWO_NUMS ENDP
+
+NUM_TO_STR PROC
+   
+    ADD AL,30H
+    MOV [MAX_STR],AL
+    MOV [MAX_STR+1],"$"
+    RET
+NUM_TO_STR ENDP
+
+END MAIN
+
+
+
+
+TASK-16
+
+.MODEL SMALL
+.STACK 100H
+
+.DATA
+X DW 2        
+N DW 5        
+RESULT DW 1 
+
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+
+    CALL CALCULATE_POWER
+
+ 
+    MOV AX,RESULT
+    CALL PRINT_NUMBER
+
+    MOV AH,4CH
+    INT 21H
+MAIN ENDP
+
+CALCULATE_POWER PROC
+    MOV AX,X
+    MOV CX,N
+    MOV BX,1
+
+    POWER_LOOP:
+        CMP CX,0
+        JE END_POWER_LOOP
+        MUL BX  
+        MOV BX,AX  
+        MOV AX,X 
+        DEC CX
+        JMP POWER_LOOP
+
+    END_POWER_LOOP:
+        MOV RESULT,BX
+        RET
+CALCULATE_POWER ENDP
+
+PRINT_NUMBER PROC
+    MOV BX,10
+    MOV CX,0
+
+    CONVERT:
+        XOR DX,DX
+        DIV BX
+        ADD DL,48
+        PUSH DX
+        INC CX
+        CMP AX,0
+        JNE CONVERT
+
+    PRINT:
+        POP DX
+        MOV AH,02H
+        INT 21H
+        LOOP PRINT
+
+    RET
+PRINT_NUMBER ENDP
+
+END MAIN
+
+
+
+
+TASK-17
+
+.MODEL SMALL
+.STACK 100H
+
+.DATA
+A DB 'ENTER NO: $'
+B DB 'PRIME NUMBERS: $'
+C DB '$'
+
+.CODE
+MAIN PROC
+  MOV AX,@DATA
+  MOV DS,AX
+
+  LEA DX,A
+  MOV AH,9
+  INT 21H
+
+  MOV BH,0
+  MOV BL,10D
+INPUT:
+  MOV AH,1
+  INT 21H
+  CMP AL,13D
+  JNE NUM
+  JMP PRINT_PRIMES
+NUM:
+  SUB AL,30H
+  MOV CL,AL
+  MOV AL,BH
+  MUL BL
+  ADD AL,CL
+  MOV BH,AL
+  JMP INPUT
+
+PRINT_PRIMES:
+  LEA DX,B
+  MOV AH,9
+  INT 21H
+
+  CALL PRINT_PRIME_PROC
+
+  LEA DX,C
+  MOV AH,9
+  INT 21H
+
+  MOV AH,4CH
+  INT 21H
+
+MAIN ENDP
+
+PRINT_PRIME_PROC PROC
+  MOV CX,2
+  MOV DX,0 
+  MOV BL,BH 
+  DEC BL 
+  MOV BH,0
+  MOV BX,BX
+
+LBL1:
+  MOV AX,CX
+  MOV DX,0
+  MOV SI,2
+LBL2:
+  CMP SI,AX
+  JGE LBL3
+  DIV SI
+  CMP DX,0
+  JZ NOT_PRIME
+  INC SI
+  JMP LBL2
+LBL3:
+  MOV DX,0
+  MOV AX,CX 
+  MOV SI,10 
+  MOV AH,0
+
+  CMP AX,10
+  JL SINGLE_DIGIT
+
+  MOV AX,CX
+  DIV SI
+  MOV DL,AL 
+  ADD DL,30H 
+  MOV AH,2
+  INT 21H
+
+  MOV AX,CX
+  MOV DX,0
+  DIV SI
+  MOV DL,AH 
+  ADD DL,30H 
+  MOV AH,2
+  INT 21H 
+
+  JMP PRINT_SPACE
+
+SINGLE_DIGIT:
+  ADD AX,30H 
+  MOV DL,AL
+  MOV AH,2
+  INT 21H 
+
+PRINT_SPACE:
+  MOV DL," " 
+  MOV AH,2
+  INT 21H
+  JMP NEXT_NUM
+NOT_PRIME:
+  MOV SI,0
+NEXT_NUM:
+  INC CX
+  CMP CX,BX
+  JL LBL1 
+
+  RET
+PRINT_PRIME_PROC ENDP
+END MAIN
+
+
+
+
+TASK-18
+
+.MODEL SMALL
+.STACK 100H
+
+.DATA
+ARR DB 5,12,15,2,1
+ARR_LEN DW 5             
+VALUE DB 15               
+RESULT DB 0               
+A DB "EXIST$"
+B DB "DO NOT EXIST$"
+
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    MOV ES,AX
+
+    CALL FIND_VALUE       
+
+  
+    MOV AH,09H            
+    CMP RESULT,1
+    JE PRINT_FOUND
+    LEA DX,B
+    JMP PRINT_MSG
+
+PRINT_FOUND:
+    LEA DX,A
+
+PRINT_MSG:
+    INT 21H
+
+   
+    MOV AH,4CH
+    INT 21H
+MAIN ENDP
+
+FIND_VALUE PROC
+    MOV CX,ARR_LEN      
+    LEA SI,ARR        
+    MOV AL,VALUE          
+
+SEARCH:
+   
+    MOV AL,[SI]           
+    INC SI                
+    CMP AL,VALUE         
+    JE FOUND              
+    LOOP SEARCH       
+
+    MOV RESULT,0         
+    JMP END      
+
+FOUND:
+    MOV RESULT,1          
+
+END:
+    RET
+FIND_VALUE ENDP
+
+END MAIN
